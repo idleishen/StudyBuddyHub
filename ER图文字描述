@@ -1,0 +1,15 @@
+实体及属性
+1.	用户表（user）
+主键：id
+属性：account（账号），nickname（昵称）,password（密码）,role（角色“ADMIN”管理员，“USER”用户），craettime（创建时间）
+2.	帖子表（post）
+主键：id
+属性：user_id(发帖人)，title（标题），content（正文）nickname（昵称），comment_count(评论数)，create_time(发帖时间)
+3.	评论表（comment）
+主键：id
+属性：post_id(发帖号)，user_id（评论用户号），nickname（昵称），content（评论内容），createtime（评论时间）
+
+实体关系
+用户1：N帖子
+用户1：N评论
+帖子1：N评论

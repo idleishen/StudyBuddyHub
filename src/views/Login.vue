@@ -24,6 +24,7 @@
         <!-- 注册表单 -->
         <div v-if="currentTab === 'register'" class="form-area">
           <input v-model="registerForm.account" type="text" placeholder="请输入账号" class="input" />
+          <input v-model="registerForm.nickname" type="text" placeholder="请输入昵称" class="input" />
           <input v-model="registerForm.password" type="password" placeholder="请输入密码(至少6位)" class="input" @keyup.enter="handleRegister" />
           <button class="btn register-btn" @click="handleRegister" :disabled="loading">
             {{ loading ? '注册中...' : '注 册' }}

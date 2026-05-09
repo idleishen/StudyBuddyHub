@@ -7,7 +7,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import java.util.Date;
 
 public class JwtUtil {
-    // 密钥（实际项目中应该放在配置文件中）
+    // 密钥
     private static final String SECRET = "xueyouquan-secret-key-2024";
     // token过期时间：7天
     private static final long EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000;

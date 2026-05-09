@@ -43,6 +43,27 @@
         </div>
         </div>
         </div>
+
+        <!--帖子详情页-->
+        <div v-if="showDetail" class="modal" @click.self="showDetail = false">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>{{ detail.title }}</h2>
+                    <button class="close-bth" @click="showDetail = false">✕</button>
+                </div>
+                <div class="motal-meta">
+                    <span>👤 {{ detail.nickname }}</span>
+                    <span>🕐 {{ formatTime(detail.createTime) }}</span>
+            </div>
+                <div class="modal-body">
+                    <p>{{ detail.content }}</p>
+                </div>
+                <!--管理员删除按钮-->
+                <div v-if="role === 'ADMIN'" class="admin-area">
+                    <button class="delete-btn" @click="handleDelete(detail.id)">删除帖子</button>
+                </div>
+            </div>
+        </div>
 </template>
 
 <script setup>
@@ -74,6 +95,11 @@ const postForm = ref({
     title: '',
     content: ''
 });
+
+//帖子详情
+const showDetail = ref(false);
+const detail = ref({});
+
 
 const postPages = computed(() => Math.ceil(total.value / pageSize) || 1);
 
@@ -211,13 +237,13 @@ const handleDelete = async (id) => {
     resize: vertical; 
 }
 .submit-btn {
-  padding: 12px; 
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff; 
-  border: none; 
-  border-radius: 8px; 
-  font-size: 16px; 
-  cursor: pointer;
+    padding: 12px; 
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    cursor: pointer;
 }
 .submit-btn:disabled { 
     opacity: 0.6; 
@@ -234,11 +260,11 @@ const handleDelete = async (id) => {
     padding: 40px; 
 }
 .post-card {
-  background: #fff; 
-  padding: 16px 20px; 
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06); 
-  cursor: pointer;
+    background: #fff; 
+    padding: 16px 20px; 
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06); 
+    cursor: pointer;
 }
 .post-card:hover { 
     box-shadow: 0 2px 12px rgba(0,0,0,0.1); 
@@ -284,4 +310,67 @@ const handleDelete = async (id) => {
     opacity: 0.4; 
     cursor: not-allowed; 
     }
+.modal {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(0,0,0,0.5); 
+    display: flex; 
+    justify-content: center;
+    align-items: center; 
+    z-index: 1000;
+}
+.modal-content {
+    background: #fff; 
+    border-radius: 12px; 
+    padding: 30px;
+    width: 90%; 
+    max-width: 600px; 
+    max-height: 80vh; 
+    overflow-y: auto;
+}
+.modal-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 12px; 
+}
+.modal-header h2 { 
+    margin: 0; 
+    font-size: 20px; 
+}
+.close-btn { 
+    background: none; 
+    border: none; 
+    font-size: 22px; 
+    cursor: pointer; 
+    color: #999; 
+}
+.modal-meta { 
+    display: flex; 
+    gap: 20px; 
+    color: #999; 
+    font-size: 13px; 
+    margin-bottom: 16px; 
+}
+.modal-body { 
+    white-space: pre-wrap; 
+    line-height: 1.8; 
+    color: #333; 
+}
+.admin-area { 
+    margin-top: 20px; 
+    border-top: 1px solid #eee; 
+    padding-top: 16px; 
+}
+.delete-post-btn { 
+    padding: 6px 14px; 
+    background: #ff4d4f; 
+    color: #fff; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+}
 </style>

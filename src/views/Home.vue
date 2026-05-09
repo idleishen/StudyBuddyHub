@@ -23,23 +23,23 @@
         <!--帖子列表-->
         <div class="post-list">
             <div v-if="posts.length === 0" class="empty">暂无帖子，快来分享你的学习心得吧！</div>
-            <div v-for="post in posts" :key="post.id" class="post-card">
+            <div v-for="post in posts" :key="post.id" class="post-card" @click="openDetail(post.id)">
                 <div class="post-title">{{ post.title }}</div>
                 <div class="post-meta">
-                    <span>👤 {{ post.authorNickname }}</span>
+                    <span>👤 {{ post.nickname }}</span>
                     <span>🕐 {{ formatTime(post.createTime) }}</span>
                 </div>
                 <div class="post-actions">
-                    <button v-if="role === 'ADMIN'" class="delete-btn" @click="handleDelete(post.id)">删除</button>
+                    <button v-if="role === 'ADMIN'" class="delete-btn" @click.stop="handleDelete(post.id)">删除</button>
                 </div>
             </div>
         </div>
 
         <!--分页-->
         <div class="pagination" v-if="total > pageSize">
-            <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+            <button :disabled="currentPage === 1" @click="changePage(currentPage - 1)">上一页</button>
             <span>{{ currentPage }} / {{ totalPages }}页</span>
-            <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+            <button :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">下一页</button>
         </div>
         </div>
         </div>
@@ -98,8 +98,7 @@
 </template>
 
 <script setup>
-import { formatter } from 'element-plus';
-import { computed, onMounted, queuePostFlushCb, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../utils/request';
 
@@ -107,30 +106,21 @@ const router = useRouter();
 const nickname = ref(localStorage.getItem('nickname') || '用户');
 const role = ref(localStorage.getItem('role') || 'USER');
 
-const handleLogout = () => {
-    localStorage.clear();
-    router.push('/login');
-}
-
-onMounted(() => {
-    fetchPosts();
-});
-
 const posts = ref([]);
 const currentPage = ref(1);
 const pageSize = 10;
 const total = ref(0);
 const posting = ref(false);
+const commenting = ref(false);
 
-const postForm = ref({  
+const postForm = ref({
     title: '',
     content: ''
 });
 
-//帖子详情
+const commentContent = ref('');
 const showDetail = ref(false);
 const detail = ref({});
-
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize) || 1);
 
@@ -139,11 +129,11 @@ const formatTime = (time) => {
     return new Date(time).toLocaleString('zh-CN');
 }
 
-// 获取帖子列表
 const fetchPosts = async () => {
     try {
-        const res = await api.get('/posts/list', {
-            page: currentPage.value, pageSize: pageSize
+        const res = await api.get('/post/list', {
+            page: currentPage.value,
+            pageSize
         });
         if (res.code === 200) {
             posts.value = res.data.records;
@@ -154,15 +144,14 @@ const fetchPosts = async () => {
     }
 }
 
-//发布帖子
 const handleCreatePost = async () => {
-    if (!postForm.value.title || !postForm.content) {
+    if (!postForm.value.title || !postForm.value.content) {
         alert('请填写帖子标题和内容');
         return;
     }
     posting.value = true;
     try {
-        const res = await api.post('/posts/create', postForm);
+        const res = await api.post('/post/create', postForm.value);
         if (res.code === 200) {
             alert('发布成功');
             postForm.value.title = '';
@@ -170,62 +159,61 @@ const handleCreatePost = async () => {
             currentPage.value = 1;
             fetchPosts();
         } else {
-            alert(res.message);
+            alert(res.message || '发布失败');
         }
     } catch (error) {
+        console.error('发布帖子失败:', error);
         alert('发布失败');
     } finally {
         posting.value = false;
     }
 }
 
-//删除帖子
 const handleDelete = async (id) => {
     if (!confirm('确定要删除这条帖子吗？')) return;
     try {
-        const res = await api.delete('/posts/delete/' + id);
+        const res = await api.delete('/post/delete/' + id);
         if (res.code === 200) {
             alert('删除成功');
             fetchPosts();
+            if (showDetail.value && detail.value.id === id) {
+                showDetail.value = false;
+            }
         } else {
-            alert(res.message);
+            alert(res.message || '删除失败');
         }
     } catch (error) {
+        console.error('删除帖子失败:', error);
         alert('删除失败');
     }
+}
 
-    const handleComment = async () => {
-        if (!commentContent.value) {
-            alert('请输入评论内容');
-            return;
-        }
-        commenting.value = true;
-        try {
-            const res = await api.post('/comments/create', {
-                postId: detail.value.id,
-                content: commentContent.value
-            });
-            if (res.code === 200) {
-                alert('评论成功');
-                commentContent.value = '';
-                //刷新评论
-                openDetail(detail.value.post.id);
-            } else {
-                alert(res.message);
-            }
-        } catch (error) {
-            alert('评论失败');
-        } finally {
-            commenting.value = false;
-        }
-    }
-
-    const changePage = (page) => {
-        if (page < 1 || page > totalPages.value) return;
-        currentPage.value = page;
-        fetchPosts();
+const openDetail = (id) => {
+    const post = posts.value.find((item) => item.id === id);
+    if (post) {
+        detail.value = { ...post, comments: post.comments || [] };
+        showDetail.value = true;
     }
 }
+
+const handleComment = async () => {
+    alert('评论功能暂未实现');
+}
+
+const changePage = (page) => {
+    if (page < 1 || page > totalPages.value) return;
+    currentPage.value = page;
+    fetchPosts();
+}
+
+const handleLogout = () => {
+    localStorage.clear();
+    router.push('/login');
+}
+
+onMounted(() => {
+    fetchPosts();
+});
 </script>
 
 <style scoped>

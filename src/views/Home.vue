@@ -208,7 +208,7 @@ const changePage = (page) => {
 
 const handleLogout = () => {
     localStorage.clear();
-    router.push('/login');
+    router.push('/Login');
 }
 
 onMounted(() => {

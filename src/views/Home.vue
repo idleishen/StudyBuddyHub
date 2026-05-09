@@ -49,9 +49,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>{{ detail.title }}</h2>
-                    <button class="close-bth" @click="showDetail = false">✕</button>
+                    <button class="close-btn" @click="showDetail = false">✕</button>
                 </div>
-                <div class="motal-meta">
+                <div class="modal-meta">
                     <span>👤 {{ detail.nickname }}</span>
                     <span>🕐 {{ formatTime(detail.createTime) }}</span>
             </div>
@@ -61,6 +61,37 @@
                 <!--管理员删除按钮-->
                 <div v-if="role === 'ADMIN'" class="admin-area">
                     <button class="delete-btn" @click="handleDelete(detail.id)">删除帖子</button>
+                </div>
+
+                <!--评论区域-->
+                <div class="comment-section">
+                    <h3>💬 评论 ({{ detail.comments?.length || 0 }})</h3>
+
+                    <!--评论列表-->
+                    <div v-if="detail.comments && detail.comments.length > 0" class="comment-list">
+                        <div v-for="c in detail.comments" :key="c.id" class="comment-item">
+                            <div class="comment-top">
+                                <span class="comment-nickname">👤 {{ c.nickname }}</span>
+                                <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+                            </div>
+                            <div class="comment-text">{{ c.content }}</div>
+                        </div>
+                    </div>
+                    <div v-else class="no-comment">暂无评论，快来说两句吧！</div>
+
+                    <!--发表评论-->
+                    <div class="comment-input-area">
+                        <input
+                            v-model="commentContent"
+                            type="text"
+                            placeholder="写下你的评论..."
+                            class="comment-input"
+                            @keyup.enter="handleComment"
+                        />
+                        <button class="comment-btn" @click="handleComment" :disabled="commenting">
+                            {{ commenting ? '发送中...' : '发表' }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -91,7 +122,7 @@ const pageSize = 10;
 const total = ref(0);
 const posting = ref(false);
 
-const postForm = ref({
+const postForm = ref({  
     title: '',
     content: ''
 });
@@ -101,7 +132,7 @@ const showDetail = ref(false);
 const detail = ref({});
 
 
-const postPages = computed(() => Math.ceil(total.value / pageSize) || 1);
+const totalPages = computed(() => Math.ceil(total.value / pageSize) || 1);
 
 const formatTime = (time) => {
     if (!time) return '';
@@ -161,6 +192,38 @@ const handleDelete = async (id) => {
         }
     } catch (error) {
         alert('删除失败');
+    }
+
+    const handleComment = async () => {
+        if (!commentContent.value) {
+            alert('请输入评论内容');
+            return;
+        }
+        commenting.value = true;
+        try {
+            const res = await api.post('/comments/create', {
+                postId: detail.value.id,
+                content: commentContent.value
+            });
+            if (res.code === 200) {
+                alert('评论成功');
+                commentContent.value = '';
+                //刷新评论
+                openDetail(detail.value.post.id);
+            } else {
+                alert(res.message);
+            }
+        } catch (error) {
+            alert('评论失败');
+        } finally {
+            commenting.value = false;
+        }
+    }
+
+    const changePage = (page) => {
+        if (page < 1 || page > totalPages.value) return;
+        currentPage.value = page;
+        fetchPosts();
     }
 }
 </script>
@@ -373,4 +436,83 @@ const handleDelete = async (id) => {
     border-radius: 6px; 
     cursor: pointer; 
 }
+.comment-section {
+    border-top: 2px solid #e8e8e8; 
+    padding-top: 24px; 
+    margin-top: 10px;
+}
+.comment-section h3 { 
+    margin-bottom: 16px; 
+    color: #333; 
+    font-size: 18px; 
+}
+.comment-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+    margin-bottom: 16px; 
+    max-height: 350px; 
+    overflow-y: auto; 
+}
+.comment-item {
+    padding: 14px 16px; 
+    background: #f9fafb; 
+    border-radius: 10px;
+}
+.comment-top { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 6px; 
+}
+.comment-nickname { 
+    font-weight: bold; 
+    color: #667eea; 
+    font-size: 14px; 
+}
+.comment-time { 
+    color: #bbb; 
+    font-size: 12px; 
+}
+.comment-text { 
+    color: #444; 
+    font-size: 15px; 
+    line-height: 1.6; 
+}
+.no-comment { 
+    text-align: center; 
+    color: #bbb; 
+    padding: 24px; 
+    font-size: 15px; 
+}
+.comment-input-area { 
+    display: flex; 
+    gap: 12px; 
+}
+.comment-input {
+    flex: 1; 
+    padding: 14px 16px; 
+    border: 2px solid #e0e0e0;
+    border-radius: 10px; 
+    font-size: 15px; 
+    outline: none;
+}
+.comment-input:focus { 
+    border-color: #667eea; }
+.comment-btn {
+    padding: 14px 28px; 
+    background: #667eea; 
+    color: #fff;
+    border: none; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-size: 15px;
+    white-space: nowrap; 
+    font-weight: bold;
+}
+.comment-btn:hover { 
+    background: #5a6fd6; }
+.comment-btn:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; }
 </style>

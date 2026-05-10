@@ -121,6 +121,7 @@ const postForm = ref({
 const commentContent = ref('');
 const showDetail = ref(false);
 const detail = ref({});
+const currentPostId = ref(null);
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize) || 1);
 
@@ -188,16 +189,57 @@ const handleDelete = async (id) => {
     }
 }
 
-const openDetail = (id) => {
-    const post = posts.value.find((item) => item.id === id);
-    if (post) {
-        detail.value = { ...post, comments: post.comments || [] };
-        showDetail.value = true;
+const fetchDetail = async (id) => {
+    try {
+        const res = await api.get('/post/detail/' + id);
+        if (res.code === 200) {
+            detail.value = {
+                ...res.data.post,
+                comments: res.data.comments || []
+            };
+            currentPostId.value = id;
+            showDetail.value = true;
+        } else {
+            alert(res.message || '获取帖子详情失败');
+        }
+    } catch (error) {
+        console.error('获取帖子详情失败:', error);
+        alert('获取帖子详情失败');
     }
 }
 
+const openDetail = (id) => {
+    fetchDetail(id);
+}
+
 const handleComment = async () => {
-    alert('评论功能暂未实现');
+    if (!commentContent.value.trim()) {
+        alert('请输入评论内容');
+        return;
+    }
+    if (!currentPostId.value) {
+        alert('请选择要评论的帖子');
+        return;
+    }
+    commenting.value = true;
+    try {
+        const res = await api.post('/comment/create', {
+            content: commentContent.value.trim(),
+            postId: currentPostId.value
+        });
+        if (res.code === 200) {
+            alert('评论成功');
+            commentContent.value = '';
+            await fetchDetail(currentPostId.value);
+        } else {
+            alert(res.message || '评论失败');
+        }
+    } catch (error) {
+        console.error('发表评论失败:', error);
+        alert('评论失败');
+    } finally {
+        commenting.value = false;
+    }
 }
 
 const changePage = (page) => {

@@ -72,7 +72,14 @@
                         <div v-for="c in detail.comments" :key="c.id" class="comment-item">
                             <div class="comment-top">
                                 <span class="comment-nickname">👤 {{ c.nickname }}</span>
+                                <div class="comment-top-right"></div>
                                 <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+                                <button
+                                    v-if="role === 'ADMIN'"
+                                    class="delete-btn"
+                                    @click="handleDeleteComment(c.id)">
+                                    删除
+                                </button>
                             </div>
                             <div class="comment-text">{{ c.content }}</div>
                         </div>
@@ -240,6 +247,23 @@ const handleComment = async () => {
         alert('评论失败');
     } finally {
         commenting.value = false;
+    }
+}
+
+//删除评论
+const handleDeleteComment = async (commentId) => {
+    if (!confirm('确定要删除这条评论吗？')) return;
+    try {
+        const res = await api.delete('/comment/delete/' + commentId);
+        if (res.code === 200) {
+            alert('删除成功');
+            fetchDetail(currentPostId.value);
+        } else {
+            alert(res.message || '删除失败');
+        }
+    } catch (error) {
+        console.error('删除评论失败:', error);
+        alert('删除失败');
     }
 }
 

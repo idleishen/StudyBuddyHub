@@ -217,20 +217,21 @@ const handleComment = async () => {
         alert('请输入评论内容');
         return;
     }
-    if (!currentPostId.value) {
+    const postId = currentPostId.value || detail.value.id;
+    if (!postId) {
         alert('请选择要评论的帖子');
         return;
     }
     commenting.value = true;
     try {
         const res = await api.post('/comment/create', {
-            content: commentContent.value.trim(),
-            postId: currentPostId.value
+            postId,
+            content: commentContent.value.trim()
         });
         if (res.code === 200) {
             alert('评论成功');
             commentContent.value = '';
-            await fetchDetail(currentPostId.value);
+            await fetchDetail(postId);
         } else {
             alert(res.message || '评论失败');
         }

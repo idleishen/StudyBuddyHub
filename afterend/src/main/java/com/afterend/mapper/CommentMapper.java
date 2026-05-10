@@ -13,4 +13,7 @@ public interface CommentMapper {
 
     @Select("SELECT * FROM comment WHERE post_id = #{postId} ORDER BY create_time ASC")
     List<Comment> findByPostId(Long postId);
+
+    @Delete("DELETE FROM comment WHERE id = #{id}")
+    void deleteById(Long id);
 }

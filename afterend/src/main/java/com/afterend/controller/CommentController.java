@@ -19,6 +19,7 @@ public class CommentController {
     @Autowired
     private UserMapper userMapper;
 
+    // 发表评论
     @PostMapping("/create")
     public Result<String> create(@RequestBody Comment comment, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -27,5 +28,16 @@ public class CommentController {
         comment.setNickname(user.getNickname());
         commentMapper.insert(comment);
         return Result.success("评论成功");
+    }
+
+    // 删除评论
+    @DeleteMapping("/delete/{id}")
+    public Result<String> delete(@PathVariable Long id, HttpServletRequest request) {
+        String role = (String) request.getAttribute("role");
+        if (!"ADMIN".equals(role)) {
+            return Result.error("无权限，仅管理员可删除评论");
+        }
+        commentMapper.deleteById(id);
+        return Result.success("评论已删除");
     }
 }

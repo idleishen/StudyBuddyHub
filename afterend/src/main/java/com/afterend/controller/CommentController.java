@@ -30,7 +30,7 @@ public class CommentController {
         return Result.success("评论成功");
     }
 
-    // 删除评论（管理员）
+    // 删除评论
     @DeleteMapping("/delete/{id}")
     public Result<String> delete(@PathVariable Long id, HttpServletRequest request) {
         String role = (String) request.getAttribute("role");

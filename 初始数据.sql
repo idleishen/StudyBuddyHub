@@ -59,8 +59,3 @@ UPDATE `post` p
 SET `comment_count` = (
     SELECT COUNT(*) FROM `comment` c WHERE c.`post_id` = p.`id`
 );
-
--- 验证数据（可选）
--- SELECT * FROM `user`;
--- SELECT * FROM `post`;
--- SELECT * FROM `comment`;
